@@ -1,0 +1,63 @@
+{
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "plain_text",
+                "emoji": true,
+                "text": "Looks like you have a scheduling conflict with this event:"
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*Today - 4:30-5pm*\nEveryone is available: @iris, @zelda"
+            },
+            "accessory": {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "emoji": true,
+                    "text": "Choose"
+                },
+                "value": "click_me_123"
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*Tomorrow - 4-4:30pm*\nEveryone is available: @iris, @zelda"
+            },
+            "accessory": {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "emoji": true,
+                    "text": "Choose"
+                },
+                "value": "click_me_123"
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "*Tomorrow - 6-6:30pm*\nSome people aren't available: @iris, ~@zelda~"
+            },
+            "accessory": {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "emoji": true,
+                    "text": "Choose"
+                },
+                "value": "click_me_123"
+            }
+        }
+    ]
+}
