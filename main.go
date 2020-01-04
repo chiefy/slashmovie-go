@@ -29,7 +29,11 @@ func main() {
 	addr := "127.0.0.1:" + os.Getenv("PORT")
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", MovieHandler).Methods(http.MethodPost)
+	r.HandleFunc("/", MovieSearchHandler).Methods(http.MethodPost)
+	r.Use(checkTimestampMiddleware)
+	r.Use(checkSlackSigningMiddleware)
+
+	r.HandleFunc("/lookup", MovieLookupHandler).Methods(http.MethodPost)
 	r.Use(checkTimestampMiddleware)
 	r.Use(checkSlackSigningMiddleware)
 
