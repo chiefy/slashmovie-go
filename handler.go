@@ -72,28 +72,26 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	url := action.ResponseURL
 	c := &http.Client{}
-	log.Println(url)
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(j))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", action.Token))
 
-	log.Println(string(j))
-	res, err := c.Do(req)
+	_, err = c.Do(req)
 	if err != nil {
 		log.Printf("error sending response %s", err)
 		http.Error(w, "Bad Request", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("%#v", res)
-
 }
 
 // MovieSearchHandler handles the slack slash command POST request
 func MovieSearchHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	log.Println("Got request to moviehandler")
 
 	movieStr := r.FormValue("text")
+	log.Println(fmt.Sprintf("Got request to moviehandler for %s", movieStr))
+
 	res, err := tmdbAPI.SearchMovie(movieStr, map[string]string{})
 	if err != nil {
 		log.Println(err)
@@ -106,7 +104,6 @@ func MovieSearchHandler(w http.ResponseWriter, r *http.Request) {
 
 	for i, m := range res.Results {
 		y := strings.Split(m.ReleaseDate, "-")
-		log.Println(m.ReleaseDate)
 		opt := &blockui.BlockOption{
 			Text: &blockui.BlockTitleText{
 				Type:  "plain_text",
@@ -129,7 +126,6 @@ func MovieSearchHandler(w http.ResponseWriter, r *http.Request) {
 	sm.AddBlock(mb)
 
 	j, err := json.Marshal(sm)
-	log.Println(string(j))
 	if err != nil {
 		log.Printf("error marshalling json %s", err)
 		http.Error(w, "JSON Error", http.StatusInternalServerError)
