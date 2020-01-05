@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/chiefy/go-slack-utils/pkg/middleware"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -14,15 +15,14 @@ const (
 )
 
 var (
-	signingSecret []byte
+	signingSecret string
 )
 
 func init() {
-	ss := os.Getenv(SlackSigningSecret)
-	if ss == "" {
+	signingSecret = os.Getenv(SlackSigningSecret)
+	if signingSecret == "" {
 		log.Fatalf("Could not find %s env var which is required", SlackSigningSecret)
 	}
-	signingSecret = []byte(ss)
 }
 
 func main() {
@@ -30,17 +30,16 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", MovieSearchHandler).Methods(http.MethodPost)
-	r.Use(checkTimestampMiddleware)
-	r.Use(checkSlackSigningMiddleware)
+	r.Use(middleware.ValidateTimestamp)
+	r.Use(middleware.ValidateSlackRequest(signingSecret))
 
 	r.HandleFunc("/lookup", MovieLookupHandler).Methods(http.MethodPost)
-	r.Use(checkTimestampMiddleware)
-	r.Use(checkSlackSigningMiddleware)
+	r.Use(middleware.ValidateTimestamp)
+	r.Use(middleware.ValidateSlackRequest(signingSecret))
 
 	srv := &http.Server{
-		Handler: r,
-		Addr:    addr,
-		// Good practice: enforce timeouts for servers you create!
+		Handler:      r,
+		Addr:         addr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}

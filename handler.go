@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/chiefy/go-slack-utils/pkg/blockui"
+	"github.com/chiefy/go-slack-utils/pkg/payload"
 	tmdb "github.com/ryanbradynd05/go-tmdb"
 	"log"
 	"net/http"
@@ -34,53 +35,35 @@ func init() {
 	tmdbAPI = tmdb.Init(k)
 }
 
+// MovieLookupHandler looks up specific movie info on TMDB and creates blocks
 func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	var action *SlackBlockAction
+	var action *payload.BlockActionsPayload
 	err := json.Unmarshal([]byte(r.Form.Get("payload")), &action)
 	if err != nil {
 		log.Printf("error decoding JSON from payload - %s", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	id, _ := strconv.Atoi(action.Actions[0].Value)
+	id, _ := strconv.Atoi(action.Actions[0].GetValue())
 	movie, err := tmdbAPI.GetMovieInfo(id, map[string]string{})
 	if err != nil {
 		log.Printf("error looking up movie ID - %s", err)
 		http.Error(w, "Bad Movie Lookup", http.StatusInternalServerError)
 		return
 	}
-	sm := NewSlackMessage()
-	sm.ResponseType = "in_channel"
-	tb := &SlackBlock{
-		Type: "section",
-		Text: &SlackText{
-			Type: "mrkdwn",
-			Text: makeMovieMarkdown(movie),
-		},
-		Accessory: &SlackAccessory{
-			Type:     "image",
-			ImageURL: fmt.Sprintf("%s/%s/%s", tmdbImageURLBase, tmdbImageSmall, movie.PosterPath),
-			AltText:  movie.Title,
-		},
-	}
-
-	ib := &SlackBlock{
-		Type: "section",
-		Accessory: &SlackAccessory{
-			Type: "image",
-			Text: &SlackText{
-				Type:  "plain_text",
-				Text:  "",
-				Emoji: false,
-			},
-			ImageURL: fmt.Sprintf("%s/%s/%s", tmdbImageURLBase, tmdbImageLarge, movie.PosterPath),
-		},
-	}
-
+	sm := payload.NewMessagePayload("in_channel")
+	ib := blockui.NewBlockImage(
+		fmt.Sprintf("%s/%s/%s", tmdbImageURLBase, tmdbImageLarge, movie.PosterPath),
+		movie.Title,
+	)
+	tb := blockui.NewBlockSection()
+	tb.SetText(
+		"mrkdwn",
+		makeMovieMarkdown(movie),
+	)
 	sm.AddBlock(tb)
 	sm.AddBlock(ib)
-
 	j, err := json.Marshal(sm)
 	if err != nil {
 		log.Printf("error marshalling json %s", err)
@@ -109,48 +92,41 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 func MovieSearchHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	log.Println("Got request to moviehandler")
-	movieStr := r.FormValue("text")
-	opts := map[string]string{}
 
-	res, err := tmdbAPI.SearchMovie(movieStr, opts)
+	movieStr := r.FormValue("text")
+	res, err := tmdbAPI.SearchMovie(movieStr, map[string]string{})
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "movie lookup error", http.StatusInternalServerError)
 		return
 	}
-	sm := NewSlackMessage()
-	tb := &SlackBlock{
-		Type: "section",
-		Text: &SlackText{
-			Type: "mrkdwn",
-			Text: fmt.Sprintf("Found %d results for *\"%s\"*:", len(res.Results), movieStr),
-		},
-	}
 
-	sm.AddBlock(tb)
-	sm.AddDivider()
-	buttons := make([]SlackAccessory, 0)
+	sm := payload.NewMessagePayload("ephemeral")
+	sel := blockui.NewBlockSelect()
 
 	for i, m := range res.Results {
 		y := strings.Split(m.ReleaseDate, "-")
-		button := &SlackAccessory{
-			Type: "button",
-			Text: &SlackText{
-				Type: "plain_text",
-				Text: fmt.Sprintf("%s (%s)", m.Title, y[0]),
+		log.Println(m.ReleaseDate)
+		opt := &blockui.BlockOption{
+			Text: &blockui.BlockTitleText{
+				Type:  "plain_text",
+				Text:  fmt.Sprintf("%s (%s)", m.Title, y[0]),
+				Emoji: false,
 			},
 			Value: strconv.Itoa(m.ID),
 		}
-		buttons = append(buttons, *button)
+		sel.AddOption(opt)
 		if i >= numResults-1 {
 			break
 		}
 	}
 
-	sm.AddBlock(&SlackBlock{
-		Type:     "actions",
-		Elements: buttons,
-	})
+	mb := blockui.NewBlockSectionWithSelect(sel)
+	mb.SetText(
+		"mrkdwn",
+		fmt.Sprintf("Found %d results for *\"%s\"*:", len(res.Results), movieStr),
+	)
+	sm.AddBlock(mb)
 
 	j, err := json.Marshal(sm)
 	log.Println(string(j))
@@ -161,11 +137,31 @@ func MovieSearchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(j)
+}
 
+func reverseSlice(a []string) []string {
+	for i := len(a)/2 - 1; i >= 0; i-- {
+		opp := len(a) - 1 - i
+		a[i], a[opp] = a[opp], a[i]
+	}
+	return a
+}
+
+func formatMoney(m uint32) string {
+	d := strconv.Itoa(int(m))
+	dSplit := reverseSlice(strings.Split(d, ""))
+	f := []string{}
+	for i, v := range dSplit {
+		if i%3 == 0 && i != 0 {
+			f = append(f, ",")
+		}
+		f = append(f, v)
+	}
+	return strings.Join(reverseSlice(f), "")
 }
 
 func makeMovieMarkdown(movie *tmdb.Movie) string {
 	l := fmt.Sprintf("<https://www.imdb.com/title/%s|IMDB link>", movie.ImdbID)
-	return fmt.Sprintf("*%s*\nRelease Date: %s\nBudget: $%d\n>%s\n\n%s",
-		movie.Title, movie.ReleaseDate, movie.Budget, movie.Overview, l)
+	return fmt.Sprintf("*%s*\nRelease Date: %s\nBudget: $%s\n>%s\n\n%s",
+		movie.Title, movie.ReleaseDate, formatMoney(movie.Budget), movie.Overview, l)
 }

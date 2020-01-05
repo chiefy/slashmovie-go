@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:d65c2637f81fa04cceaee61c205c33a54bd77adab2e084d710bd4a0b9d1df845"
+  name = "github.com/chiefy/go-slack-utils"
+  packages = [
+    "pkg/blockui",
+    "pkg/middleware",
+    "pkg/payload",
+  ]
+  pruneopts = "UT"
+  revision = "afda83a52ab29fa004af7f9fcf651aec0f533929"
+
+[[projects]]
   digest = "1:cbec35fe4d5a4fba369a656a8cd65e244ea2c743007d8f6c1ccb132acf9d1296"
   name = "github.com/gorilla/mux"
   packages = ["."]
@@ -21,6 +33,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/chiefy/go-slack-utils/pkg/blockui",
+    "github.com/chiefy/go-slack-utils/pkg/middleware",
+    "github.com/chiefy/go-slack-utils/pkg/payload",
     "github.com/gorilla/mux",
     "github.com/ryanbradynd05/go-tmdb",
   ]
