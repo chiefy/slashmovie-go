@@ -1,12 +1,14 @@
 package main
 
 import (
-	"github.com/chiefy/go-slack-utils/pkg/middleware"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/chiefy/go-slack-utils/pkg/middleware"
+	"github.com/gorilla/mux"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 const (
@@ -16,6 +18,7 @@ const (
 
 var (
 	signingSecret string
+	debugMode     bool
 )
 
 func init() {
@@ -29,13 +32,14 @@ func main() {
 	addr := "127.0.0.1:" + os.Getenv("PORT")
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", MovieSearchHandler).Methods(http.MethodPost)
-	r.Use(middleware.ValidateTimestamp)
-	r.Use(middleware.ValidateSlackRequest(signingSecret))
 
+	r.HandleFunc("/", MovieSearchHandler).Methods(http.MethodPost)
 	r.HandleFunc("/lookup", MovieLookupHandler).Methods(http.MethodPost)
-	r.Use(middleware.ValidateTimestamp)
-	r.Use(middleware.ValidateSlackRequest(signingSecret))
+
+	if debugMode := os.Getenv("DEBUG"); debugMode == "" {
+		r.Use(middleware.ValidateTimestamp)
+		r.Use(middleware.ValidateSlackRequest(signingSecret))
+	}
 
 	srv := &http.Server{
 		Handler:      r,
