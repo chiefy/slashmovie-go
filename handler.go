@@ -57,8 +57,6 @@ func GetOMDBInfo(imdbID string) (string, string, error) {
 	url := fmt.Sprintf("%s?apikey=%s&tomatoes=true&i=%s", omdbURLBase, omdbAPIKey, imdbID)
 	c := &http.Client{}
 
-	log.Println(url)
-
 	res, err := c.Get(url)
 	if err != nil {
 		return "", "", err
@@ -68,8 +66,6 @@ func GetOMDBInfo(imdbID string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-
-	log.Println(string(body))
 
 	var rt map[string]interface{}
 	if err := json.Unmarshal(body, &rt); err != nil {
@@ -85,10 +81,6 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 	action := &payload.BlockActionsPayload{}
 
 	p := r.Form.Get("payload")
-
-	if debugMode {
-		log.Println(p)
-	}
 
 	err := json.Unmarshal([]byte(p), &action)
 	if err != nil {

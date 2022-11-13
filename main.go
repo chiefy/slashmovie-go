@@ -18,7 +18,7 @@ const (
 
 var (
 	signingSecret string
-	debugMode     bool
+	debugMode     bool = false
 )
 
 func init() {
@@ -29,6 +29,9 @@ func init() {
 }
 
 func main() {
+	if os.Getenv("DEBUG") == "1" {
+		debugMode = true
+	}
 	addr := "127.0.0.1:" + os.Getenv("PORT")
 
 	r := mux.NewRouter()
@@ -36,7 +39,7 @@ func main() {
 	r.HandleFunc("/", MovieSearchHandler).Methods(http.MethodPost)
 	r.HandleFunc("/lookup", MovieLookupHandler).Methods(http.MethodPost)
 
-	if debugMode := os.Getenv("DEBUG"); debugMode == "" {
+	if !debugMode {
 		r.Use(middleware.ValidateTimestamp)
 		r.Use(middleware.ValidateSlackRequest(signingSecret))
 	}
@@ -44,8 +47,8 @@ func main() {
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         addr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		ReadTimeout:  5 * time.Second,
 	}
 	log.Println(GetVersion())
 	log.Fatal(srv.ListenAndServe())

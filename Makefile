@@ -12,8 +12,12 @@ binary:=slashmovie
 build: $(binary)
 
 $(binary):
-	go build -ldflags \
-	"-X main.Version=$(VERSION) \
+	go build \
+	-tags netgo \
+	-ldflags \
+	"-s \
+	-w \
+	-X main.Version=$(VERSION) \
 	-X main.Commit=$(commit) \
 	-X main.Date=$(ts)" \
 	-o $(binary) .
