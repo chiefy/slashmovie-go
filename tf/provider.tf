@@ -1,5 +1,5 @@
 provider "fly" {
-  useinternaltunnel    = true
+  useinternaltunnel    = false
   internaltunnelorg    = "personal"
   internaltunnelregion = "ewr"
 }
