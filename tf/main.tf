@@ -10,7 +10,7 @@ resource "fly_ip" "this" {
 resource "fly_machine" "this" {
   app    = fly_app.this.name
   region = "ewr"
-  image  = "chiefy/slashmovie:${var.version}"
+  image  = "chiefy/slashmovie:${var.app-version}"
   env = {
     TMDB_API_KEY         = var.tmdb-api-key
     OMDB_API_KEY         = var.omdb-api-key

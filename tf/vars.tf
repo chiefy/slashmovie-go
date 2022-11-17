@@ -1,4 +1,4 @@
-variable "version" {
+variable "app-version" {
   type        = string
   description = "version of slashmovie image to use"
 }
