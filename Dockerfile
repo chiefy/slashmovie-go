@@ -20,8 +20,6 @@ RUN apt update -y \
     && apt upgrade -y \
     && apt install -y ca-certificates
 
-COPY --from=builder /usr/src/app/start.sh .
 COPY --from=builder /usr/src/app/slashmovie .
-COPY --from=chiefy/tired-proxy:1.0.0 /app/tired-proxy .
 
-CMD [ "/app/start.sh" ]
+CMD [ "/app/slashmovie" ]
