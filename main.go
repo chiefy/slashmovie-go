@@ -32,7 +32,7 @@ func main() {
 	if os.Getenv("DEBUG") == "1" {
 		debugMode = true
 	}
-	addr := "127.0.0.1:" + os.Getenv("PORT")
+	addr := "0.0.0.0:" + os.Getenv("PORT")
 
 	r := mux.NewRouter()
 
