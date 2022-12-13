@@ -14,8 +14,7 @@ RUN make build
 
 FROM debian:11-slim
 
-ENV PORT=5000
-EXPOSE $PORT
+EXPOSE 5000
 
 WORKDIR /app
 
