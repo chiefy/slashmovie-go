@@ -50,6 +50,6 @@ func main() {
 		WriteTimeout: 5 * time.Second,
 		ReadTimeout:  5 * time.Second,
 	}
-	log.Println(GetVersion())
-	log.Fatalf("Running slashmovie on %s\n%s", addr, srv.ListenAndServe())
+	log.Printf("%s\nrunning on %s", GetVersion(), addr)
+	log.Fatal(srv.ListenAndServe())
 }
