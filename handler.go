@@ -79,6 +79,7 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send back empty 200 right away so Slack doesn't hit the 3000ms timeout
 	w.WriteHeader(http.StatusOK)
+	w.Write(nil)
 
 	r.ParseForm()
 
