@@ -80,6 +80,7 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 	// Send back empty 200 right away so Slack doesn't hit the 3000ms timeout
 	w.WriteHeader(http.StatusOK)
 	w.Write(nil)
+	log.Println("sent back initial 200 response")
 
 	r.ParseForm()
 
@@ -139,6 +140,8 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("ERROR: error sending response %s", err)
 		return
 	}
+	log.Println("done with lookup, sent response to ", url)
+
 }
 
 // MovieSearchHandler handles the slack slash command POST request

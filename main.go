@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/chiefy/go-slack-utils/pkg/middleware"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -44,8 +45,10 @@ func main() {
 		r.Use(middleware.ValidateSlackRequest(signingSecret))
 	}
 
+	h := handlers.LoggingHandler(os.Stdout, r)
+
 	srv := &http.Server{
-		Handler:      r,
+		Handler:      h,
 		Addr:         addr,
 		WriteTimeout: 5 * time.Second,
 		ReadTimeout:  5 * time.Second,

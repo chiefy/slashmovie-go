@@ -15,7 +15,6 @@ build: $(binary)
 
 $(binary):
 	go build \
-	-tags netgo \
 	-ldflags \
 	"-s \
 	-w \
