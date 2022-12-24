@@ -76,35 +76,35 @@ func GetOMDBInfo(imdbID string) (string, string, error) {
 
 // MovieLookupHandler looks up specific movie info on TMDB and creates blocks
 func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Send back empty 200 right away so Slack doesn't hit the 3000ms timeout
+	w.WriteHeader(http.StatusOK)
+
 	r.ParseForm()
 
 	action := &payload.BlockActionsPayload{}
 
 	p := r.Form.Get("payload")
-
 	err := json.Unmarshal([]byte(p), &action)
 	if err != nil {
-		log.Printf("error decoding JSON from payload - %s", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Printf("ERROR: error decoding JSON from payload - %s", err)
 		return
 	}
+
 	id, err := strconv.Atoi(action.Actions[0].GetValue())
 	if err != nil {
-		log.Printf("error converting movie ID from string: %s, %s", action.Actions[0].GetValue(), err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Printf("ERROR: error converting movie ID from string: %s, %s", action.Actions[0].GetValue(), err)
 		return
 	}
 	movie, err := tmdbAPI.GetMovieInfo(id, map[string]string{})
 	if err != nil {
-		log.Printf("error looking up movie ID - %s", err)
-		http.Error(w, "Bad Movie Lookup", http.StatusInternalServerError)
+		log.Printf("ERROR: error looking up movie ID - %s", err)
 		return
 	}
 
 	metascore, imdbRating, err := GetOMDBInfo(movie.ImdbID)
 	if err != nil {
-		log.Printf("error looking up movie ID - %s", err)
-		http.Error(w, "Bad OMDB Movie Lookup", http.StatusInternalServerError)
+		log.Printf("ERROR: error looking up movie ID - %s", err)
 		return
 	}
 
@@ -122,13 +122,12 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 	sm.AddBlock(ib)
 	j, err := json.Marshal(sm)
 	if err != nil {
-		log.Printf("error marshalling json %s", err)
-		http.Error(w, "JSON Error", http.StatusInternalServerError)
+		log.Printf("ERROR: error marshalling json %s", err)
 		return
 	}
-	url := action.ResponseURL
-	c := &http.Client{}
 
+	c := &http.Client{}
+	url := action.ResponseURL
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(j))
 
 	req.Header.Set("Content-Type", "application/json")
@@ -136,8 +135,7 @@ func MovieLookupHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = c.Do(req)
 	if err != nil {
-		log.Printf("error sending response %s", err)
-		http.Error(w, "Bad Request", http.StatusInternalServerError)
+		log.Printf("ERROR: error sending response %s", err)
 		return
 	}
 }
