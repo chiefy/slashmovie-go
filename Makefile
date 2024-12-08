@@ -1,6 +1,6 @@
 -include .env
 
-VERSION:=2.1.0
+VERSION:=2.2.0
 DOCKER_REPO_USER=chiefy
 DOCKER_IMAGE_NAME=$(DOCKER_REPO_USER)/$(binary):$(VERSION)
 
@@ -27,10 +27,10 @@ $(binary):
 local-proxy:
 	@ngrok http $(PORT)
 
-.PHONY: clean 
+.PHONY: clean
 clean:
 	@-rm -f $(binary)
-	
+
 .PHONY: run
 run: $(binary)
 	@./$(binary)

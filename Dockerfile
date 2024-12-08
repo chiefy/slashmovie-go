@@ -1,6 +1,6 @@
-FROM golang:1.18-bullseye AS builder
+FROM golang:1.23-bullseye AS builder
 
-ENV GOOS=linux 
+ENV GOOS=linux
 
 WORKDIR /usr/src/app
 
@@ -12,7 +12,7 @@ COPY . .
 
 RUN make build
 
-FROM debian:11-slim
+FROM debian:stable-slim
 
 EXPOSE 5000
 
