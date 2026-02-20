@@ -1,6 +1,6 @@
 -include .env
 
-VERSION:=2.2.0
+VERSION:=3.0.0
 DOCKER_REPO_USER=chiefy
 DOCKER_IMAGE_NAME=$(DOCKER_REPO_USER)/$(binary):$(VERSION)
 

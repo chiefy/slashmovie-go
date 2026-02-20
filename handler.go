@@ -20,7 +20,6 @@ const (
 	// TmdbAPIKey is the env var name containing the TMDB API key
 	TmdbAPIKeyEnv    = "TMDB_API_KEY"
 	tmdbImageURLBase = "https://image.tmdb.org/t/p"
-	tmdbImageSmall   = "w92"
 	tmdbImageLarge   = "w342"
 	numResults       = 5
 	// OmdbAPIKeyEnv is the env var name containing the OMDB API key

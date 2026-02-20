@@ -2,13 +2,12 @@ package main
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/chiefy/go-slack-utils/pkg/middleware"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -29,30 +28,58 @@ func init() {
 	}
 }
 
+func logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var (
+			ip     = r.RemoteAddr
+			method = r.Method
+			url    = r.URL.String()
+			proto  = r.Proto
+		)
+
+		userAttrs := slog.Group("user", "ip", ip)
+		requestAttrs := slog.Group("request", "method", method, "url", url, "proto", proto)
+
+		slog.Info("request received", userAttrs, requestAttrs)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func getEnv(key, fallback string) string {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		value = fallback
+	}
+	return value
+}
+
 func main() {
 	if os.Getenv("DEBUG") == "1" {
+		log.Println("Running in DEBUG mode!")
 		debugMode = true
 	}
-	addr := "0.0.0.0:" + os.Getenv("PORT")
 
-	r := mux.NewRouter()
+	addr := "0.0.0.0:" + getEnv("PORT", "5555")
 
-	r.HandleFunc("/", MovieSearchHandler).Methods(http.MethodPost)
-	r.HandleFunc("/lookup", MovieLookupHandler).Methods(http.MethodPost)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", MovieSearchHandler)
+	mux.HandleFunc("/lookup", MovieLookupHandler)
+
+	mw := logRequest(mux)
 
 	if !debugMode {
-		r.Use(middleware.ValidateTimestamp)
-		r.Use(middleware.ValidateSlackRequest(signingSecret))
+		mw = middleware.ValidateTimestamp(mw)
+		mw = middleware.ValidateSlackRequest(signingSecret)(mw)
 	}
 
-	h := handlers.LoggingHandler(os.Stdout, r)
-
 	srv := &http.Server{
-		Handler:      h,
+		Handler:      mw,
 		Addr:         addr,
 		WriteTimeout: 5 * time.Second,
 		ReadTimeout:  5 * time.Second,
 	}
+
 	log.Printf("%s\nrunning on %s", GetVersion(), addr)
 	log.Fatal(srv.ListenAndServe())
 }

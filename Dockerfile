@@ -1,4 +1,4 @@
-FROM golang:1.23-bullseye AS builder
+FROM golang:1.26-trixie AS builder
 
 ENV GOOS=linux
 
